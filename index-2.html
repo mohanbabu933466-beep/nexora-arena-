@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexora Arena</title>
+<meta name="theme-color" content="#050308">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050308;--card:#1a0836;--card2:#2a1058;--pri:#5b17ff;--red:#ff2a2a;--tx:#f4f0ff;--mut:#a79bc7;--ok:#3ddc97;--hd:Rajdhani,Impact,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,sans-serif;padding-bottom:78px}
+main{padding:14px;max-width:560px;margin:auto}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--red));display:grid;place-items:center;font:700 22px var(--hd)}
+.top small{color:var(--mut);display:block;line-height:1.1}.top b{font:700 22px var(--hd);color:var(--red)}
+h2{font:700 24px var(--hd);color:var(--red);margin:18px 0 8px}
+h3{font:700 20px/1.2 var(--hd);margin:8px 0}
+.mut{color:var(--mut);font-size:14px}
+.card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tile{margin:0;padding:18px 4px;border-radius:14px;background:var(--card);color:var(--tx);font:700 17px var(--hd);border:2px solid transparent;cursor:pointer;text-align:center}
+.tile.on{border-color:var(--red);background:linear-gradient(160deg,var(--card2),var(--card))}
+.mc{background:var(--card);border-radius:18px;overflow:hidden;margin-bottom:14px;padding-bottom:12px}
+.ban{height:96px;background:radial-gradient(circle at 80% 20%,#ff2a2a66,transparent 55%),linear-gradient(135deg,#3a0f9a,#12042b);display:flex;flex-direction:column;justify-content:flex-end;padding:10px 14px}
+.ban b{font:700 34px/1 var(--hd);letter-spacing:1px}.ban span{color:var(--mut);font-size:13px}
+.mc h3,.mc .g3,.mc .bar,.mc .row,.mc .room,.mc>p{margin-left:14px;margin-right:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #ffffff22;border-bottom:1px solid #ffffff22;text-align:center;font-weight:700;padding:8px 0}
+.g3 div+div{border-left:1px solid #ffffff22}.g3 small{display:block;color:var(--mut);font-weight:400;font-size:12px}
+.bar{height:6px;border-radius:9px;background:#ffffff1c;margin-top:12px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#1e90ff,var(--pri))}
+.row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+button,input,select{font:inherit;border:0;border-radius:12px;padding:12px 14px;color:var(--tx);background:#12062a;width:100%;margin-top:8px}
+button{background:var(--pri);font-weight:700;cursor:pointer}
+.row button{width:auto;margin:0;padding:9px 22px}
+button.red{background:var(--red)}button.alt{background:var(--card2)}button:disabled{opacity:.45}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.ok{color:var(--ok);font-weight:700}
+.room{background:#12062a;border:1px dashed var(--ok);border-radius:10px;padding:10px;margin-top:10px;color:var(--ok)}.room b{color:#fff;font-size:18px;margin-right:10px}
+.item{display:flex;justify-content:space-between;align-items:center;background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;font-weight:700;cursor:pointer}
+.item span{color:var(--mut)}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#0d0420;border-top:1px solid #ffffff18}
+nav button{margin:0;border-radius:0;background:none;color:var(--mut);font:700 15px var(--hd);padding:16px 2px}
+nav button.on{color:#fff;box-shadow:inset 0 3px 0 var(--red)}
+table{width:100%;border-collapse:collapse}td,th{padding:9px 4px;text-align:left;border-bottom:1px solid #ffffff18}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav id="nav"></nav>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyAt_4wg-l98Vkcw98m-aRAGv2ODnqSXJ6U",
+  authDomain: "nexora-arena-a7d6c.firebaseapp.com",
+  projectId: "nexora-arena-a7d6c",
+  messagingSenderId: "744518988903",
+  appId: "1:744518988903:web:5b431b8694b5b318aa10c2"
+});
+const VAPID = "YOUR_VAPID_KEY";
+const ADMINS = ["mohankumaraurangabada@gmail.com"];
+const auth = firebase.auth(), db = firebase.firestore();
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = t => { const d = new Date(t); return isNaN(d) ? "-" : d.toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); };
+let me, profile, tab = "play", mode = "All", isAdmin = false, data = [];
+
+auth.onAuthStateChanged(async u => {
+  me = u; isAdmin = !!u && ADMINS.includes(u.email);
+  if (u) { const d = await db.collection("users").doc(u.uid).get(); profile = d.exists ? d.data() : null; }
+  render();
+});
+const go = t => { tab = t; render(); };
+const login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message));
+
+async function load() {
+  const s = await db.collection("tournaments").orderBy("time").get();
+  data = await Promise.all(s.docs.map(async d => {
+    const r = db.collection("tournaments").doc(d.id).collection("regs");
+    const [mine, all] = await Promise.all([r.doc(me.uid).get(), r.get()]);
+    let room = null;
+    if (mine.exists) { try { const x = await db.collection("tournaments").doc(d.id).collection("secret").doc("room").get(); room = x.exists ? x.data() : null; } catch (e) {} }
+    return { id: d.id, t: d.data(), cnt: all.size, reg: mine.exists, room };
+  }));
+}
+
+function card(x) {
+  const t = x.t, full = x.cnt >= +t.slots, pct = Math.min(100, x.cnt / (+t.slots || 1) * 100);
+  return `<article class="mc"><div class="ban"><b>${esc(t.mode)}</b><span>Map: ${esc(t.map)}</span></div>
+  <h3>${esc(t.title)}</h3>
+  <div class="g3"><div><small>Shuru</small>${fmt(t.time)}</div><div><small>Prize</small>${esc(t.prize)}</div><div><small>Per kill</small>${esc(t.perkill || 0)}</div></div>
+  <div class="bar"><i style="width:${pct}%"></i></div>
+  <div class="row"><span>${x.cnt}/${esc(t.slots)} slots</span>${x.reg ? `<span class="ok">Joined ✓</span>` : `<button ${full ? "disabled" : ""} onclick="join('${x.id}')">${full ? "Full" : "Join karo"}</button>`}</div>
+  ${x.reg ? (x.room ? `<div class="room">Room ID <b>${esc(x.room.id)}</b> Password <b>${esc(x.room.pass)}</b></div>` : `<p class="mut">Room ID match se pehle yahin dikhegi.</p>`) : ""}</article>`;
+}
+
+async function render() {
+  const items = [["play","Play"],["mine","My Matches"],["rank","Ranks"],["me","Account"]];
+  $("#nav").innerHTML = me && profile ? items.map(([k,l]) => `<button class="${tab===k?"on":""}" onclick="go('${k}')">${l}</button>`).join("") : "";
+  const a = $("#app");
+  if (!me) { a.innerHTML = `<h2>Nexora Arena</h2><div class="card"><p>Tournament khelne ke liye login karo.</p><button onclick="login()">Google se login karo</button></div>`; return; }
+  if (!profile) { a.innerHTML = `<h2>Profile banao</h2><div class="card"><input id="pn" placeholder="In-game naam"><input id="pu" inputmode="numeric" placeholder="Free Fire UID"><button onclick="saveProfile()">Save karo</button></div>`; return; }
+  if (tab === "play" || tab === "mine") {
+    a.innerHTML = `<p class="mut">Load ho raha hai...</p>`; await load();
+    const head = `<div class="top"><div class="av">${esc(profile.name[0].toUpperCase())}</div><div><small>Welcome back</small><b>${esc(profile.name)}</b></div></div>`;
+    if (tab === "mine") { const l = data.filter(x => x.reg); a.innerHTML = head + `<h2>My Matches</h2>` + (l.map(card).join("") || `<div class="card mut">Aapne abhi koi match join nahi kiya.</div>`); return; }
+    const l = data.filter(x => mode === "All" || x.t.mode === mode);
+    a.innerHTML = head + `<div class="tiles">${["All","Solo","Duo","Squad"].map(m => `<button class="tile ${mode===m?"on":""}" onclick="mode='${m}';render()">${m}</button>`).join("")}</div><h2>Tournaments</h2>` + (l.map(card).join("") || `<div class="card mut">Abhi koi tournament nahi hai.</div>`);
+  } else if (tab === "rank") board();
+  else if (tab === "me") {
+    a.innerHTML = `<div class="top"><div class="av">${esc(profile.name[0].toUpperCase())}</div><div><small>${esc(me.email)}</small><b>${esc(profile.name)}</b></div></div>
+    <div class="card"><span class="mut">Free Fire UID</span><h3>${esc(profile.ffuid)}</h3></div>
+    <div class="item" onclick="enablePush()">Notification chalu karo<span>›</span></div>
+    ${isAdmin ? `<div class="item" onclick="go('admin')">Admin panel<span>›</span></div>` : ""}
+    <div class="item" onclick="auth.signOut()">Logout<span>›</span></div>`;
+  } else if (tab === "admin") admin();
+}
+
+async function saveProfile() {
+  const name = $("#pn").value.trim(), ffuid = $("#pu").value.trim();
+  if (!name || !ffuid) return alert("Naam aur UID dono daalo");
+  profile = { ...(profile || {}), name, ffuid };
+  await db.collection("users").doc(me.uid).set(profile, { merge: true });
+  render();
+}
+async function join(id) {
+  await db.collection("tournaments").doc(id).collection("regs").doc(me.uid).set({ name: profile.name, ffuid: profile.ffuid, email: me.email, at: Date.now() });
+  render();
+}
+async function board() {
+  const snap = await db.collection("results").get(), m = {};
+  snap.forEach(d => { const r = d.data(); m[r.name] ??= { pts: 0, kills: 0 }; m[r.name].pts += +r.points; m[r.name].kills += +r.kills; });
+  const rows = Object.entries(m).sort((a, b) => b[1].pts - a[1].pts);
+  $("#app").innerHTML = `<h2>Leaderboard</h2><div class="card">` + (rows.length ? `<table><tr><th>#</th><th>Player</th><th>Kills</th><th>Pts</th></tr>${rows.map(([n, v], i) => `<tr><td>${i + 1}</td><td>${esc(n)}</td><td>${v.kills}</td><td>${v.pts}</td></tr>`).join("")}</table>` : `<p class="mut">Abhi koi result nahi hai.</p>`) + `</div>`;
+}
+async function enablePush() {
+  try {
+    if (!("Notification" in window)) return alert("Is browser mein notification nahi chalte. Chrome use karo.");
+    if (await Notification.requestPermission() !== "granted") return alert("Notification allow karna padega.");
+    const reg = await navigator.serviceWorker.register("firebase-messaging-sw.js");
+    const token = await firebase.messaging().getToken({ vapidKey: VAPID, serviceWorkerRegistration: reg });
+    await db.collection("users").doc(me.uid).set({ token }, { merge: true });
+    alert("Notification chalu ho gaye");
+  } catch (e) { alert(e.message); }
+}
+
+async function admin() {
+  const ts = await db.collection("tournaments").get();
+  const opts = ts.docs.map(d => `<option value="${d.id}">${esc(d.data().title)}</option>`).join("");
+  $("#app").innerHTML = `<h2>Admin panel</h2>
+  <div class="card"><h3>Naya tournament</h3><input id="t1" placeholder="Title"><select id="t2"><option>Solo</option><option>Duo</option><option>Squad</option></select>
+  <input id="t3" placeholder="Map (Bermuda)"><input id="t4" type="datetime-local"><input id="t5" placeholder="Prize (sponsor reward)"><input id="t6" type="number" placeholder="Per kill points"><input id="t7" type="number" placeholder="Total slots"><button onclick="addT()">Tournament banao</button></div>
+  <div class="card"><h3>Room ID / Password</h3><select id="r0">${opts}</select><input id="r1" placeholder="Room ID"><input id="r2" placeholder="Password"><button onclick="setRoom()">Room save karo</button></div>
+  <div class="card"><h3>Result daalo</h3><select id="s0">${opts}</select><input id="s1" placeholder="Player ka in-game naam"><input id="s2" type="number" placeholder="Kills"><input id="s3" type="number" placeholder="Placement (1-12)"><button onclick="addR()">Result save karo</button>
+  <p class="mut">Points = kills + placement (1st=12, 2nd=9, 3rd=8, 4th=7 ... 10th-12th=1)</p></div>`;
+}
+async function addT() {
+  const g = i => $("#t" + i).value;
+  if (!g(1) || !g(4)) return alert("Title aur time daalo");
+  await db.collection("tournaments").add({ title: g(1), mode: g(2), map: g(3), time: g(4), fee: 0, prize: g(5) || "-", perkill: +g(6) || 0, slots: +g(7) || 48, status: "Upcoming" });
+  alert("Ban gaya"); admin();
+}
+async function setRoom() { await db.collection("tournaments").doc($("#r0").value).collection("secret").doc("room").set({ id: $("#r1").value, pass: $("#r2").value }); alert("Room save ho gaya"); }
+async function addR() {
+  const k = +$("#s2").value || 0, p = +$("#s3").value || 12;
+  const pp = {1:12,2:9,3:8,4:7,5:6,6:5,7:4,8:3,9:2,10:1,11:1,12:1}[p] ?? 0;
+  await db.collection("results").add({ tid: $("#s0").value, name: $("#s1").value.trim(), kills: k, place: p, points: k + pp });
+  alert("Result save ho gaya");
+}
+</script>
+</body>
+</html>
